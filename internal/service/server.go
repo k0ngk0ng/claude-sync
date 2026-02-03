@@ -107,14 +107,12 @@ func (s *Server) loadConfig(adminToken string) {
 	}
 }
 
-// saveConfig 保存配置
+// saveConfig 保存配置 (调用者需要持有锁或不持有锁)
 func (s *Server) saveConfig() error {
-	s.mu.RLock()
 	tenants := make([]*Tenant, 0, len(s.tenants))
 	for _, t := range s.tenants {
 		tenants = append(tenants, t)
 	}
-	s.mu.RUnlock()
 
 	config := ServerConfig{
 		Tenants: tenants,
@@ -243,14 +241,18 @@ func (s *Server) Start() error {
 	mux.HandleFunc("/sync", s.tenantAuth(s.handleSync))
 	mux.HandleFunc("/stats", s.tenantAuth(s.handleTenantStats))
 
-	// 管理接口 (需要 admin token，暂时用第一个租户的 token)
+	// 管理接口 (需要 admin token)
 	mux.HandleFunc("/admin/tenants", s.handleAdminTenants)
 	mux.HandleFunc("/admin/stats", s.handleAdminStats)
+
+	// 管理界面
+	s.registerAdminUI(mux)
 
 	fmt.Printf("Claude Sync 服务器启动 (多租户模式)\n")
 	fmt.Printf("监听端口: %d\n", s.port)
 	fmt.Printf("数据目录: %s\n", s.dataDir)
 	fmt.Printf("租户数量: %d\n", len(s.tenants))
+	fmt.Printf("管理界面: http://localhost:%d/admin\n", s.port)
 	fmt.Println("等待客户端连接...")
 
 	return http.ListenAndServe(fmt.Sprintf(":%d", s.port), mux)
