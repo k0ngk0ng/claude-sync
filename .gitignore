@@ -2,7 +2,7 @@
 build/
 
 # Wails generated
-frontend/wailsjs/
+wailsjs/
 
 # Go
 *.exe
