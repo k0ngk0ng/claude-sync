@@ -1,6 +1,5 @@
 # Build outputs
 build/
-dist/
 
 # Wails generated
 frontend/wailsjs/
