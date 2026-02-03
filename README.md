@@ -109,6 +109,53 @@ make dev
 make run-server
 ```
 
+## 多租户管理
+
+服务端支持多租户，每个用户有独立的数据空间和 Token。
+
+### 数据隔离
+
+```
+/data/claude-sync/
+├── config.json          # 租户配置
+└── tenants/
+    ├── user1/           # 用户1 的数据
+    │   └── projects/
+    ├── user2/           # 用户2 的数据
+    │   └── projects/
+    └── ...
+```
+
+### 管理 API
+
+```bash
+# 查看所有租户
+curl "http://server:8080/admin/tenants?admin_token=YOUR_ADMIN_TOKEN"
+
+# 创建新租户
+curl -X POST "http://server:8080/admin/tenants?admin_token=YOUR_ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"id": "user2", "name": "User 2", "token": "user2-secret-token"}'
+
+# 删除租户
+curl -X DELETE "http://server:8080/admin/tenants?admin_token=YOUR_ADMIN_TOKEN&id=user2"
+
+# 查看服务器统计
+curl "http://server:8080/admin/stats?admin_token=YOUR_ADMIN_TOKEN"
+```
+
+### 租户使用
+
+每个租户使用自己的 Token 连接：
+
+```bash
+# 用户1
+claude-sync config -server http://server:8080 -token user1-token -name "User1-Mac"
+
+# 用户2
+claude-sync config -server http://server:8080 -token user2-token -name "User2-Mac"
+```
+
 ## 服务端部署
 
 ### 使用 systemd
