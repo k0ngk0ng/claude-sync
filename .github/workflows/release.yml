@@ -27,7 +27,6 @@ jobs:
           GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o build/claude-sync-server-linux-arm64 ./cmd/server
 
           # macOS
-          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o build/claude-sync-server-darwin-amd64 ./cmd/server
           GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o build/claude-sync-server-darwin-arm64 ./cmd/server
 
           # Windows
@@ -41,36 +40,6 @@ jobs:
 
   build-client-macos:
     name: Build Client (macOS)
-    runs-on: macos-13
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-
-      - name: Install Wails
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
-
-      - name: Build macOS (amd64)
-        run: wails build -platform darwin/amd64
-
-      - name: Rename and Package (amd64)
-        run: |
-          cd build/bin
-          mv claude-sync.app claude-sync-darwin-amd64.app
-          zip -r claude-sync-darwin-amd64.zip claude-sync-darwin-amd64.app
-
-      - name: Upload macOS amd64
-        uses: actions/upload-artifact@v4
-        with:
-          name: client-macos-amd64
-          path: build/bin/claude-sync-darwin-amd64.zip
-
-  build-client-macos-arm64:
-    name: Build Client (macOS ARM64)
     runs-on: macos-14
     steps:
       - name: Checkout
@@ -87,16 +56,16 @@ jobs:
       - name: Build macOS (arm64)
         run: wails build -platform darwin/arm64
 
-      - name: Rename and Package (arm64)
+      - name: Rename and Package
         run: |
           cd build/bin
           mv claude-sync.app claude-sync-darwin-arm64.app
           zip -r claude-sync-darwin-arm64.zip claude-sync-darwin-arm64.app
 
-      - name: Upload macOS arm64
+      - name: Upload macOS Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: client-macos-arm64
+          name: client-macos
           path: build/bin/claude-sync-darwin-arm64.zip
 
   build-client-windows:
@@ -160,7 +129,7 @@ jobs:
 
   release:
     name: Create Release
-    needs: [build-server, build-client-macos, build-client-macos-arm64, build-client-windows, build-client-linux]
+    needs: [build-server, build-client-macos, build-client-windows, build-client-linux]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -181,8 +150,7 @@ jobs:
           cp artifacts/server-binaries/* release/
 
           # Client binaries
-          cp artifacts/client-macos-amd64/*.zip release/
-          cp artifacts/client-macos-arm64/*.zip release/
+          cp artifacts/client-macos/*.zip release/
           cp artifacts/client-windows/*.exe release/
           cp artifacts/client-linux/* release/
 
