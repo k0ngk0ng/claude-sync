@@ -1,0 +1,47 @@
+# Build outputs
+build/
+dist/
+
+# Wails generated
+frontend/wailsjs/
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Test data
+test-data/
+*.log
+
+# Node (if frontend uses npm)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temp
+*.tmp
+*.temp
+.cache/
