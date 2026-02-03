@@ -1,0 +1,20 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "claude-sync",
+  "outputfilename": "claude-sync",
+  "frontend:install": "",
+  "frontend:build": "",
+  "frontend:dev:watcher": "",
+  "frontend:dev:serverUrl": "",
+  "author": {
+    "name": "k0ngk0ng",
+    "email": ""
+  },
+  "info": {
+    "companyName": "Claude Sync",
+    "productName": "Claude Sync",
+    "productVersion": "1.0.0",
+    "copyright": "Copyright 2024",
+    "comments": "Claude Code 历史记录同步工具"
+  }
+}

@@ -1,118 +1,112 @@
 # Claude Sync
 
-Claude Code 历史记录自动同步工具，支持多台机器之间无感同步。
+Claude Code 历史记录自动同步工具，像 Google Drive 一样无感同步。
+
+![screenshot](docs/screenshot.png)
 
 ## 特性
 
-- 🔄 **自动同步**: 后台守护进程，定时自动同步
-- 🖥️ **多平台**: 支持 macOS / Linux / Windows
-- 🗺️ **路径映射**: 支持不同机器目录名不同的情况
-- 🔒 **安全**: Token 认证，数据传输安全
-- 📁 **增量同步**: 只同步变化的文件，节省带宽
+- 🖥️ **桌面应用** - 系统托盘运行，类似 Google Drive / Dropbox
+- 🔄 **自动同步** - 后台定时同步，无需手动操作
+- 🗺️ **路径映射** - 支持不同机器目录名不同的情况
+- 🔒 **安全** - Token 认证，数据传输安全
+- 📁 **增量同步** - 只同步变化的文件，节省带宽
+- 💻 **跨平台** - 支持 macOS / Linux / Windows
+
+## 架构
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Mac (公司)      │     │   公网服务器     │     │  Mac (家里)      │
+│  Claude Sync    │────▶│  claude-sync    │◀────│  Claude Sync    │
+│  (桌面应用)      │     │  server         │     │  (桌面应用)      │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
 
 ## 快速开始
 
-### 1. 编译
+### 1. 部署服务端
+
+在公网服务器上运行：
 
 ```bash
-# 编译当前平台
-make build
+# 下载服务端
+wget https://github.com/k0ngk0ng/claude-sync/releases/latest/download/claude-sync-server-linux-amd64
+chmod +x claude-sync-server-linux-amd64
 
-# 编译所有平台
-make all
-
-# 安装到系统
-make install
+# 启动服务
+./claude-sync-server-linux-amd64 -port 8080 -token your-secret-token -data /data/claude-sync
 ```
 
-### 2. 在公网服务器上启动服务
+### 2. 安装客户端
 
-```bash
-claude-sync server -port 8080 -token your-secret-token -data /data/claude-sync
-```
+下载对应平台的客户端：
 
-建议使用 systemd 或 supervisor 管理服务进程。
+- **macOS**: `claude-sync-darwin-arm64.app` (Apple Silicon) / `claude-sync-darwin-amd64.app` (Intel)
+- **Windows**: `claude-sync-windows-amd64.exe`
+- **Linux**: `claude-sync-linux-amd64`
 
-### 3. 在本地机器配置并启动
+### 3. 配置
 
-**机器 A (如公司电脑):**
-```bash
-claude-sync config -server http://your-server:8080 -token your-secret-token -name "Work-Mac"
-claude-sync start
-```
+打开应用，点击设置，填写：
 
-**机器 B (如家里电脑):**
-```bash
-claude-sync config -server http://your-server:8080 -token your-secret-token -name "Home-Mac"
-claude-sync start
-```
+- **服务器地址**: `http://your-server:8080`
+- **认证令牌**: `your-secret-token`
+- **机器名称**: `MacBook-Home` (用于区分不同机器)
 
 ### 4. 路径映射 (可选)
 
-如果两台机器的项目目录不同，需要配置路径映射：
+如果两台机器的项目目录不同：
 
-```bash
-# 假设公司电脑项目在 /Users/work/projects
-# 家里电脑项目在 /Users/home/dev
-
-# 在家里电脑上配置:
-claude-sync mapping -add "/Users/work/projects:/Users/home/dev"
-
-# 查看所有映射
-claude-sync mapping -list
+```
+公司电脑: /Users/work/projects
+家里电脑: /Users/home/dev
 ```
 
-## 命令参考
+在家里电脑的设置中添加路径映射：
+- 远程路径: `/Users/work/projects`
+- 本地路径: `/Users/home/dev`
 
-### 客户端命令
+## 从源码构建
 
-```bash
-# 启动同步守护进程 (后台运行)
-claude-sync start
+### 依赖
 
-# 前台运行 (调试用)
-claude-sync start -f
-
-# 停止守护进程
-claude-sync stop
-
-# 查看状态
-claude-sync status
-
-# 立即执行一次同步
-claude-sync sync
-
-# 配置
-claude-sync config -server <url> -token <token> -name <name> -interval <seconds>
-claude-sync config -show
-
-# 路径映射
-claude-sync mapping -add "remote_path:local_path"
-claude-sync mapping -remove "remote_path"
-claude-sync mapping -list
-```
-
-### 服务端命令
+- Go 1.21+
+- [Wails](https://wails.io/) v2
 
 ```bash
-claude-sync server -port 8080 -token your-secret-token -data ./data
+# 安装 Wails
+go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+# 检查环境
+wails doctor
 ```
 
-## 配置文件
+### 构建
 
-配置保存在 `~/.claude/sync-config.json`:
+```bash
+# 克隆仓库
+git clone https://github.com/k0ngk0ng/claude-sync.git
+cd claude-sync
 
-```json
-{
-  "server_url": "http://your-server:8080",
-  "token": "your-secret-token",
-  "machine_id": "abc12345",
-  "machine_name": "MacBook-Home",
-  "sync_interval": 30,
-  "path_mappings": {
-    "/Users/work/projects": "/Users/home/dev"
-  }
-}
+# 构建客户端 (当前平台)
+make build
+
+# 构建服务端
+make server
+
+# 构建所有平台
+make build-all
+```
+
+### 开发
+
+```bash
+# 开发模式 (热重载)
+make dev
+
+# 运行服务端 (开发)
+make run-server
 ```
 
 ## 服务端部署
@@ -129,7 +123,7 @@ After=network.target
 [Service]
 Type=simple
 User=claude-sync
-ExecStart=/usr/local/bin/claude-sync server -port 8080 -token YOUR_TOKEN -data /data/claude-sync
+ExecStart=/usr/local/bin/claude-sync-server -port 8080 -token YOUR_TOKEN -data /data/claude-sync
 Restart=always
 RestartSec=5
 
@@ -144,72 +138,30 @@ sudo systemctl start claude-sync
 
 ### 使用 Docker
 
-```dockerfile
-FROM golang:1.21-alpine AS builder
-WORKDIR /app
-COPY . .
-RUN go build -o claude-sync .
-
-FROM alpine:latest
-COPY --from=builder /app/claude-sync /usr/local/bin/
-EXPOSE 8080
-CMD ["claude-sync", "server", "-port", "8080", "-token", "${TOKEN}", "-data", "/data"]
-```
-
 ```bash
-docker run -d -p 8080:8080 -v /data/claude-sync:/data -e TOKEN=your-secret-token claude-sync
+docker run -d \
+  --name claude-sync \
+  -p 8080:8080 \
+  -v /data/claude-sync:/data \
+  -e TOKEN=your-secret-token \
+  ghcr.io/k0ngk0ng/claude-sync-server
 ```
 
-## 开机自启动 (客户端)
+## 项目结构
 
-### macOS
-
-创建 `~/Library/LaunchAgents/com.claude-sync.plist`:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.claude-sync</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/usr/local/bin/claude-sync</string>
-        <string>start</string>
-        <string>-f</string>
-    </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <true/>
-</dict>
-</plist>
 ```
-
-```bash
-launchctl load ~/Library/LaunchAgents/com.claude-sync.plist
-```
-
-### Linux
-
-创建 `~/.config/systemd/user/claude-sync.service`:
-
-```ini
-[Unit]
-Description=Claude Sync Client
-
-[Service]
-ExecStart=/usr/local/bin/claude-sync start -f
-Restart=always
-
-[Install]
-WantedBy=default.target
-```
-
-```bash
-systemctl --user enable claude-sync
-systemctl --user start claude-sync
+claude-sync/
+├── main.go                 # 客户端入口 (Wails)
+├── cmd/server/             # 服务端入口
+├── internal/
+│   ├── config/             # 配置管理
+│   ├── service/            # 同步服务 & 服务端
+│   └── tray/               # 系统托盘 (备用)
+├── frontend/               # Web UI
+│   └── dist/
+├── build/                  # 构建产物
+├── wails.json              # Wails 配置
+└── Makefile
 ```
 
 ## License
